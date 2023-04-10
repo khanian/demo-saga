@@ -2,10 +2,10 @@ package com.khy.demosaga.model;
 
 public enum SagaStates {
     ORDER_REQUEST,
-    DISCOUNT_CHECK,
+    DISCOUNT_CHECKED,
     DISCOUNT_CHECK_OK,
     DISCOUNT_CHECK_FAIL,
-    POINT_CHECK,
+    POINT_CHECKED,
     POINT_CHECK_OK,
     POINT_CHECK_FAIL,
     DISCOUNT_REQUESTED,

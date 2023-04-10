@@ -5,5 +5,5 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Builder
-public record Saga(LocalDateTime localDateTime, Long consumerId, Long orderId, String status, String value) {
+public record Saga(Long sagaId, LocalDateTime localDateTime, Long consumerId, Long orderId, String status, String value) {
 }
