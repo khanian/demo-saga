@@ -22,10 +22,10 @@ public class DemoSagaApplication {
     public ApplicationRunner runner (SagaProducer sagaProducer) {
         return args -> {
             Saga saga = Saga.builder()
-                    .localDateTime(LocalDateTime.now())
-                    .consumerId(1L)
+                    .eventTime(LocalDateTime.now())
+                    .customerId(1L)
                     .orderId(1L)
-                    .status(String.valueOf(SagaStates.ORDER_REQUEST))
+                    .currentState(String.valueOf(SagaStates.ORDER_REQUEST))
                     .value("")
                     .build();
             sagaProducer.async("saga-topic", saga);
