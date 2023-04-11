@@ -5,14 +5,20 @@ import com.khy.demosaga.model.SagaEvents;
 import com.khy.demosaga.model.SagaStates;
 import com.khy.demosaga.producer.SagaProducer;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.state.State;
+import org.springframework.statemachine.support.DefaultStateMachineContext;
+import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
+import org.springframework.statemachine.transition.Transition;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -25,105 +31,122 @@ public class SagaService {
     private static final String PAYMENT_CANCEL_TOPIC = "saga.pay.pay.cancel";
     private static final String ORDER_TOPIC = "order-topic";
     private static final String ORDER_CANCEL_TOPIC = "saga.order.order.cancel";
+    private static final String ORDER_ID_HEADER = "orderId";
 
     private final SagaProducer sagaProducer;
     private static SagaEvents sagaEvents;
 
-//    private final StateMachineFactory<SagaStates, SagaEvents> factory;
-//    private final StateMachine <SagaStates, SagaEvents> stateMachine;
+    private final StateMachineFactory<SagaStates, SagaEvents> factory;
 
-    public void sendMessage(String topic, Saga saga) {
-        sagaProducer.async(topic, saga);
+
+    public Saga getNext(Saga saga) {
+        SagaEvents nextEvent = getNextEvent(SagaStates.valueOf(saga.currentState()));
+
+        //
+        SagaStates nextState = getNextState(getSagaStateMachine(saga));
+        log.info("nextStepString ========= {}", nextState);
+
+        System.out.println(nextEvent);
+
+        Saga nextSaga = Saga.builder()
+                .customerId(saga.customerId())
+                .orderId(saga.orderId())
+                .eventTime(LocalDateTime.now())
+                .currentState(String.valueOf(nextEvent))
+                .value("data|aaa|bbb")
+                .build();
+
+        log.info("saga ::::: [{}]", saga.toString());
+        log.info("next saga ::::: [{}]", nextSaga.toString());
+        log.info("nextStep [0] = {}, [1] = {}", saga.currentState(), nextSaga.currentState());
+
+        String topic = getTopic(nextEvent);
+
+        // produce
+        sagaProducer.asyncTest(topic, saga);
+
+        return nextSaga;
     }
 
-    public List<Saga> getNext(Saga saga) {
-        List<Saga> nextStep = new ArrayList<>();
-        List<Object> nextList = getNextStepList(SagaStates.valueOf(saga.currentState()));
-        nextList.forEach(event -> {
-            System.out.println(event);
-
-            Saga nextSaga = Saga.builder()
-                    .customerId(saga.customerId())
-                    .orderId(saga.orderId())
-                    .eventTime(LocalDateTime.now())
-                    .currentState(String.valueOf(event))
-                    .value("data|aaa|bbb")
-                    .build();
-
-            log.info("saga ::::: [{}]", saga.toString());
-            log.info("next saga ::::: [{}]", nextSaga.toString());
-            log.info("nextStep [0] = {}, [1] = {}", saga.currentState(), nextSaga.currentState());
-
-            sagaProducer.asyncTest(event.toString()+"_TOPIC", saga);
-            nextStep.add(saga);
-        });
-        return nextStep;
+    private String getTopic(SagaEvents nextEvent) {
+        return null;
     }
 
-    private static List<Object> getNextStepList (SagaStates state) {
-        //Map<String, Object> nextEventMap = new HashMap<>();
-        List<Object> listNext = new ArrayList<>();
+    private static SagaEvents getNextEvent (SagaStates state) {
         switch(state) {
             case ORDER_REQUEST -> {
-                //nextEventMap.put("event", sagaEvents.DISCOUNT_QUERY);
-                listNext.add(sagaEvents.DISCOUNT_QUERY);
+                return sagaEvents.DISCOUNT_QUERY;
             }
             case DISCOUNT_CHECK_OK -> {
-                listNext.add(sagaEvents.POINT_QUERY);
+                return sagaEvents.POINT_QUERY;
             }
             case POINT_CHECK_OK -> {
-                listNext.add(sagaEvents.DISCOUNT_REQUEST);
+                return sagaEvents.DISCOUNT_REQUEST;
             }
             case DISCOUNT_REQUEST_OK -> {
-                listNext.add(sagaEvents.PAYMENT_REQUEST);
+                return sagaEvents.PAYMENT_REQUEST;
             }
             case PAYMENT_REQUEST_OK -> {
-                listNext.add(sagaEvents.ORDER_COMPLETE);
+                return sagaEvents.ORDER_COMPLETE;
             }
-            case PAYMENT_CANCEL_REQUEST, ORDER_CANCEL_REQUEST -> {
-                listNext.add(sagaEvents.PAYMENT_CANCEL);
-                listNext.add(sagaEvents.DISCOUNT_CANCEL);
-                listNext.add(sagaEvents.ORDER_CANCEL);
+            case PAYMENT_REQUEST_FAIL, PAYMENT_CANCEL_OK, PAYMENT_CANCELED -> {
+                return sagaEvents.DISCOUNT_CANCEL;
             }
-            case PAYMENT_REQUEST_FAIL, DISCOUNT_CANCEL_REQUEST -> {
-                listNext.add(sagaEvents.DISCOUNT_CANCEL);
-                listNext.add(sagaEvents.ORDER_CANCEL);
+            case DISCOUNT_CHECK_FAIL, POINT_CHECK_FAIL, DISCOUNT_REQUEST_FAIL, DISCOUNT_CANCEL_OK -> {
+                return sagaEvents.ORDER_CANCEL;
             }
-            case DISCOUNT_CHECK_FAIL, POINT_CHECK_FAIL, DISCOUNT_REQUEST_FAIL -> {
-                listNext.add(sagaEvents.ORDER_CANCEL);
+            case PAYMENT_CANCEL_FAIL, DISCOUNT_CANCEL_FAIL -> {
+                return sagaEvents.ORDER_CANCEL_ERROR;
             }
+//            case ORDER_COMPLETED -> {
+//                return sagaEvents.PAYMENT_CANCEL;
+//            } // 고민이 필요해
             default -> throw new IllegalStateException("Unexpected value: " + state);
         }
-        return listNext;
     }
 
-//    private static String handleEvent(String currentState, StateMachine<SagaStates, SagaEvents> handleStateMachine) {
-//        log.info ("case sagaState ::: {}", currentState);
-//        String nextState = null;
-//
-//        switch (currentState) {
-//            case "ORDER_REQUEST" -> {
-//                nextState = SagaStates.DISCOUNT_CHECKED.name();
-//                handleStateMachine.sendEvent(SagaEvents.DISCOUNT_QUERY);
-//                log.info("next state :: {}", nextState);
-//            }
-//            case "DISCOUNT_CHECK_OK" -> handleStateMachine.sendEvent(SagaEvents.POINT_QUERY);
-//            case "POINT_CHECK_OK" -> handleStateMachine.sendEvent(SagaEvents.DISCOUNT_REQUEST);
-//            case "DISCOUNT_REQUEST_OK" -> {
-//                System.out.println("여기 들어왔어......!!!");
-//                handleStateMachine.sendEvent(SagaEvents.PAYMENT_REQUEST);
-//            }
-//            case "PAYMENT_REQUEST_OK" -> handleStateMachine.sendEvent(SagaEvents.ORDER_COMPLETE);
-//            // cancel event
-//            case "PAYMENT_CANCEL_REQUEST" -> handleStateMachine.sendEvent(SagaEvents.PAYMENT_CANCEL);
-//            case "PAYMENT_REQUEST_FAIL", "DISCOUNT_CANCEL_REQUEST"
-//                    -> handleStateMachine.sendEvent(SagaEvents.DISCOUNT_CANCEL);
-//            case "DISCOUNT_CHECK_FAIL", "POINT_CHECK_FAIL", "DISCOUNT_REQUEST_FAIL", "ORDER_CANCEL_REQUEST"
-//                    -> handleStateMachine.sendEvent(SagaEvents.ORDER_CANCEL);
-//            default -> throw new IllegalStateException("Unexpected value: " + currentState);
-//        }
-//
-//        return nextState;
-//    }
+    public StateMachine<SagaStates, SagaEvents> getSagaStateMachine(Saga saga) {
+        StateMachine<SagaStates, SagaEvents> sm = this.build(saga);
+
+        // get next event
+        SagaEvents event = getNextEvent(SagaStates.valueOf(saga.currentState()));
+        log.info("get sagaEvent from switch case = {}", event);
+
+        Message<SagaEvents> eventMessage = MessageBuilder.withPayload(event)
+                .setHeader(ORDER_ID_HEADER, saga.orderId())
+                .build();
+
+        sm.sendEvent(eventMessage);
+        return sm;
+    }
+
+    private StateMachine<SagaStates, SagaEvents> build(Saga saga) {
+        StateMachine<SagaStates, SagaEvents> sm = this.factory.getStateMachine(String.valueOf(saga.orderId()));
+        sm.stop();
+        sm.getStateMachineAccessor()
+                .doWithAllRegions(sma -> {
+                    sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<>() {
+                        @Override
+                        public void preStateChange(State<SagaStates, SagaEvents> state, Message<SagaEvents> message, Transition<SagaStates, SagaEvents> transition, StateMachine<SagaStates, SagaEvents> stateMachine, StateMachine<SagaStates, SagaEvents> rootStateMachine) {
+                            Optional.ofNullable(message).ifPresent(msg ->
+                                    Optional.ofNullable((Long)msg.getHeaders().getOrDefault(ORDER_ID_HEADER, -1L))
+                                            .ifPresent(orderId -> {
+                                                System.out.println("orderId = " + orderId);
+                                            }));
+                        }
+                    });
+
+                    sma.resetStateMachine(new DefaultStateMachineContext<>(
+                            SagaStates.valueOf(saga.currentState()), null, null, null));
+                });
+        sm.start();
+        return sm;
+    }
+
+    public static SagaStates getNextState(StateMachine<SagaStates, SagaEvents> stateMachine) {
+        Transition<SagaStates, SagaEvents> transition = stateMachine.getTransitions().iterator().next();
+        log.info("transition now status :: {}", transition.getTarget().getId().toString());
+        return transition.getTarget().getId();
+    }
 
 }
