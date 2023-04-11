@@ -106,29 +106,13 @@ class SagaStateMachineConfiguration extends EnumStateMachineConfigurerAdapter<Sa
         ;
     }
 
-    //    @Override
-//    public void configure(StateMachineConfigurationConfigurer<SagaStates, SagaEvents> config) throws Exception {
-//        config.withConfiguration()
-//                .autoStartup(true)
-//                .listener(listener());
-//    }
-//
-//    @Bean
-//    public StateMachineListener<SagaStates, SagaEvents> listener() {
-//        return new StateMachineListenerAdapter<SagaStates, SagaEvents>() {
-//            @Override
-//            public void stateChanged(State<SagaStates, SagaEvents> from, State<SagaStates, SagaEvents> to) {
-//                log.info("State change to {}", to.getId().toString());
-//            }
-//        };
-//    }
     @Override
     public void configure(StateMachineConfigurationConfigurer<SagaStates, SagaEvents> config) throws Exception {
         StateMachineListenerAdapter<SagaStates, SagaEvents> adapter = new StateMachineListenerAdapter<>() {
             @Override
             public void stateChanged(State<SagaStates, SagaEvents> fromState, State<SagaStates, SagaEvents> toState) {
                 // 리스너의 동작을 구현
-                log.info("$$$$$$$$$$$$$$$State changed from {} to {}",
+                log.info("State changed from {} to {}",
                         fromState == null ? "start" : fromState.getId().toString(),
                         toState.getId().toString());
             }
