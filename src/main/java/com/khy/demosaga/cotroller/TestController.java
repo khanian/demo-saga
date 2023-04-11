@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,12 +24,12 @@ public class TestController {
     }
 
     @GetMapping("v1/next")
-    public Saga getNext() {
+    public List<Saga> getNext() {
         Saga saga = Saga.builder()
                 .eventTime(LocalDateTime.now())
                 .customerId(2L)
                 .orderId(2L)
-                .currentState(String.valueOf(SagaStates.DISCOUNT_REQUEST_OK))
+                .currentState(String.valueOf(SagaStates.PAYMENT_CANCEL_REQUEST))
                 .value("")
                 .build();
         return sagaService.getNext(saga);

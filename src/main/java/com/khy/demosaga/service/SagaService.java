@@ -2,12 +2,17 @@ package com.khy.demosaga.service;
 
 import com.khy.demosaga.model.Saga;
 import com.khy.demosaga.model.SagaEvents;
+import com.khy.demosaga.model.SagaStates;
 import com.khy.demosaga.producer.SagaProducer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -16,77 +21,80 @@ public class SagaService {
 
     private static final String SAGA_TOPIC = "saga-topic";
     private static final String DISCOUNT_TOPIC = "discount-topic";
-    private static final String PAYMENT_TOPIC = "payment-topic";
+    private static final String PAYMENT_TOPIC = "pay.request";
+    private static final String PAYMENT_CANCEL_TOPIC = "saga.pay.pay.cancel";
     private static final String ORDER_TOPIC = "order-topic";
+    private static final String ORDER_CANCEL_TOPIC = "saga.order.order.cancel";
 
     private final SagaProducer sagaProducer;
     private static SagaEvents sagaEvents;
 
-    //    private final StateMachineFactory<SagaStates, SagaEvents> factory;
+//    private final StateMachineFactory<SagaStates, SagaEvents> factory;
 //    private final StateMachine <SagaStates, SagaEvents> stateMachine;
 
     public void sendMessage(String topic, Saga saga) {
         sagaProducer.async(topic, saga);
     }
 
-    public Saga getNext(Saga saga) {
-        String[] nextStep = getNextStepString(saga.currentState());
-        Saga nextSaga = Saga.builder()
-                .customerId(saga.customerId())
-                .orderId(saga.orderId())
-                .eventTime(LocalDateTime.now())
-                .currentState(nextStep[0])
-                .value("data|aaa|bbb")
-                .build();
+    public List<Saga> getNext(Saga saga) {
+        List<Saga> nextStep = new ArrayList<>();
+        List<Object> nextList = getNextStepList(SagaStates.valueOf(saga.currentState()));
+        nextList.forEach(event -> {
+            System.out.println(event);
 
-        log.info("saga ::::: [{}]", saga.toString());
-        log.info("next saga ::::: [{}]", nextSaga.toString());
-        log.info("nextStep [0] = {}, [1] = {}", nextStep[0], nextStep[1]);
+            Saga nextSaga = Saga.builder()
+                    .customerId(saga.customerId())
+                    .orderId(saga.orderId())
+                    .eventTime(LocalDateTime.now())
+                    .currentState(String.valueOf(event))
+                    .value("data|aaa|bbb")
+                    .build();
 
-        sagaProducer.asyncTest(nextStep[1], saga);
-        log.info("done!!!!");
-        return nextSaga;
+            log.info("saga ::::: [{}]", saga.toString());
+            log.info("next saga ::::: [{}]", nextSaga.toString());
+            log.info("nextStep [0] = {}, [1] = {}", saga.currentState(), nextSaga.currentState());
+
+            sagaProducer.asyncTest(event.toString()+"_TOPIC", saga);
+            nextStep.add(saga);
+        });
+        return nextStep;
     }
 
-
-    private static String[] getNextStepString (String state) {
-        String[] nextEvent = new String[2];
+    private static List<Object> getNextStepList (SagaStates state) {
+        //Map<String, Object> nextEventMap = new HashMap<>();
+        List<Object> listNext = new ArrayList<>();
         switch(state) {
-            case "ORDER_REQUEST" -> {
-                nextEvent[0] = String.valueOf(sagaEvents.DISCOUNT_QUERY);
-                nextEvent[1] = DISCOUNT_TOPIC;
+            case ORDER_REQUEST -> {
+                //nextEventMap.put("event", sagaEvents.DISCOUNT_QUERY);
+                listNext.add(sagaEvents.DISCOUNT_QUERY);
             }
-            case "DISCOUNT_CHECK_OK" -> {
-                nextEvent[0] = String.valueOf(sagaEvents.POINT_QUERY);
-                nextEvent[1] = PAYMENT_TOPIC;
+            case DISCOUNT_CHECK_OK -> {
+                listNext.add(sagaEvents.POINT_QUERY);
             }
-            case "POINT_CHECK_OK" -> {
-                nextEvent[0] = String.valueOf(sagaEvents.DISCOUNT_REQUEST);
-                nextEvent[1] = DISCOUNT_TOPIC;
+            case POINT_CHECK_OK -> {
+                listNext.add(sagaEvents.DISCOUNT_REQUEST);
             }
-            case "DISCOUNT_REQUEST_OK" -> {
-                nextEvent[0] = String.valueOf(sagaEvents.PAYMENT_REQUEST);
-                nextEvent[1] = PAYMENT_TOPIC;
+            case DISCOUNT_REQUEST_OK -> {
+                listNext.add(sagaEvents.PAYMENT_REQUEST);
             }
-            case "PAYMENT_REQUEST_OK" -> {
-                nextEvent[0] = String.valueOf(sagaEvents.ORDER_COMPLETE);
-                nextEvent[1] = ORDER_TOPIC;
+            case PAYMENT_REQUEST_OK -> {
+                listNext.add(sagaEvents.ORDER_COMPLETE);
             }
-            case "PAYMENT_CANCEL_REQUEST" -> {
-                nextEvent[0] = String.valueOf(SagaEvents.PAYMENT_CANCEL);
-                nextEvent[1] = PAYMENT_TOPIC;
+            case PAYMENT_CANCEL_REQUEST, ORDER_CANCEL_REQUEST -> {
+                listNext.add(sagaEvents.PAYMENT_CANCEL);
+                listNext.add(sagaEvents.DISCOUNT_CANCEL);
+                listNext.add(sagaEvents.ORDER_CANCEL);
             }
-            case "PAYMENT_REQUEST_FAIL", "DISCOUNT_CANCEL_REQUEST" -> {
-                nextEvent[0] = String.valueOf(SagaEvents.DISCOUNT_CANCEL);
-                nextEvent[1] = DISCOUNT_TOPIC;
+            case PAYMENT_REQUEST_FAIL, DISCOUNT_CANCEL_REQUEST -> {
+                listNext.add(sagaEvents.DISCOUNT_CANCEL);
+                listNext.add(sagaEvents.ORDER_CANCEL);
             }
-            case "DISCOUNT_CHECK_FAIL", "POINT_CHECK_FAIL", "DISCOUNT_REQUEST_FAIL", "ORDER_CANCEL_REQUEST" -> {
-                nextEvent[0] = String.valueOf(SagaEvents.ORDER_CANCEL);
-                nextEvent[1] = ORDER_TOPIC;
+            case DISCOUNT_CHECK_FAIL, POINT_CHECK_FAIL, DISCOUNT_REQUEST_FAIL -> {
+                listNext.add(sagaEvents.ORDER_CANCEL);
             }
             default -> throw new IllegalStateException("Unexpected value: " + state);
         }
-        return nextEvent;
+        return listNext;
     }
 
 //    private static String handleEvent(String currentState, StateMachine<SagaStates, SagaEvents> handleStateMachine) {
