@@ -5,7 +5,6 @@ import com.khy.demosaga.model.SagaEvents;
 import com.khy.demosaga.model.SagaStates;
 import com.khy.demosaga.producer.SagaProducer;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -18,7 +17,7 @@ import org.springframework.statemachine.transition.Transition;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -26,24 +25,24 @@ import java.util.*;
 public class SagaService {
 
     private static final String SAGA_TOPIC = "saga-topic";
-    private static final String DISCOUNT_TOPIC = "discount-topic";
-    private static final String PAYMENT_TOPIC = "pay.request";
-    private static final String PAYMENT_CANCEL_TOPIC = "saga.pay.pay.cancel";
-    private static final String ORDER_TOPIC = "order-topic";
-    private static final String ORDER_CANCEL_TOPIC = "saga.order.order.cancel";
+    private static final String ORDER_REQUEST = "order-request";
+    private static final String ORDER_RESPONSE = "order-response";
+    private static final String DISCOUNT_REQUEST = "discount-request";
+    private static final String DISCOUNT_RESPONSE = "discount-response";
+    private static final String PAYMENT_REQUEST = "payment-request";
+    private static final String PAYMENT_RESPONSE= "payment-response";
     private static final String ORDER_ID_HEADER = "orderId";
 
     private final SagaProducer sagaProducer;
-    private static SagaEvents sagaEvents;
-
+    private final SagaEvents sagaEvents;
     private final StateMachineFactory<SagaStates, SagaEvents> factory;
 
 
     public Saga getNext(Saga saga) {
-        SagaEvents nextEvent = getNextEvent(SagaStates.valueOf(saga.currentState()));
+        SagaEvents nextEvent = getSagaEvent(SagaStates.valueOf(saga.currentState()));
 
         //
-        SagaStates nextState = getNextState(getSagaStateMachine(saga));
+        SagaStates nextState = getNextState(getStateMachine(saga));
         log.info("nextStepString ========= {}", nextState);
 
         System.out.println(nextEvent);
@@ -72,13 +71,13 @@ public class SagaService {
         return null;
     }
 
-    private static SagaEvents getNextEvent (SagaStates state) {
+    private SagaEvents getSagaEvent(SagaStates state) {
         switch(state) {
             case ORDER_REQUEST -> {
-                return sagaEvents.DISCOUNT_QUERY;
+                return sagaEvents.DISCOUNT_CHECK;
             }
             case DISCOUNT_CHECK_OK -> {
-                return sagaEvents.POINT_QUERY;
+                return sagaEvents.POINT_CHECK;
             }
             case POINT_CHECK_OK -> {
                 return sagaEvents.DISCOUNT_REQUEST;
@@ -96,7 +95,7 @@ public class SagaService {
                 return sagaEvents.ORDER_CANCEL;
             }
             case PAYMENT_CANCEL_FAIL, DISCOUNT_CANCEL_FAIL -> {
-                return sagaEvents.ORDER_CANCEL_ERROR;
+                return sagaEvents.ORDER_CANCEL_FAIL;
             }
 //            case ORDER_COMPLETED -> {
 //                return sagaEvents.PAYMENT_CANCEL;
@@ -105,11 +104,11 @@ public class SagaService {
         }
     }
 
-    public StateMachine<SagaStates, SagaEvents> getSagaStateMachine(Saga saga) {
+    public StateMachine<SagaStates, SagaEvents> getStateMachine(Saga saga) {
         StateMachine<SagaStates, SagaEvents> sm = this.build(saga);
 
         // get next event
-        SagaEvents event = getNextEvent(SagaStates.valueOf(saga.currentState()));
+        SagaEvents event = getSagaEvent(SagaStates.valueOf(saga.currentState()));
         log.info("get sagaEvent from switch case = {}", event);
 
         Message<SagaEvents> eventMessage = MessageBuilder.withPayload(event)

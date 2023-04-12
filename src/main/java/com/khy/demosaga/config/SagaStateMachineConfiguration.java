@@ -1,17 +1,10 @@
 package com.khy.demosaga.config;
 
-import com.khy.demosaga.model.Saga;
 import com.khy.demosaga.model.SagaEvents;
 import com.khy.demosaga.model.SagaStates;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
-import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.action.Action;
-import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
@@ -19,11 +12,6 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
-import org.springframework.statemachine.support.DefaultStateMachineContext;
-import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
-import org.springframework.statemachine.transition.Transition;
-
-import java.util.Optional;
 
 @Slf4j
 @Configuration
@@ -54,7 +42,7 @@ class SagaStateMachineConfiguration extends EnumStateMachineConfigurerAdapter<Sa
                 .state(SagaStates.DISCOUNT_CANCELED)
                 .state(SagaStates.DISCOUNT_CANCEL_OK)
                 .state(SagaStates.DISCOUNT_CANCEL_FAIL)
-                .end(SagaStates.ORDER_CANCEL_FAIL)
+                .end(SagaStates.ORDER_CANCEL_FAILED)
                 .end(SagaStates.ORDER_CANCELED)
                 .end(SagaStates.ORDER_COMPLETED);
     }
@@ -63,10 +51,10 @@ class SagaStateMachineConfiguration extends EnumStateMachineConfigurerAdapter<Sa
     public void configure(StateMachineTransitionConfigurer<SagaStates, SagaEvents> transitions) throws Exception {
         transitions
                 .withExternal()
-                .source(SagaStates.ORDER_REQUEST).target(SagaStates.DISCOUNT_CHECKED).event(SagaEvents.DISCOUNT_QUERY)
+                .source(SagaStates.ORDER_REQUEST).target(SagaStates.DISCOUNT_CHECKED).event(SagaEvents.DISCOUNT_CHECK)
                 .and()
                 .withExternal()
-                .source(SagaStates.DISCOUNT_CHECK_OK).target(SagaStates.POINT_CHECKED).event(SagaEvents.POINT_QUERY)
+                .source(SagaStates.DISCOUNT_CHECK_OK).target(SagaStates.POINT_CHECKED).event(SagaEvents.POINT_CHECK)
                 .and()
                 .withExternal()
                 .source(SagaStates.DISCOUNT_CHECK_FAIL).target(SagaStates.ORDER_CANCELED).event(SagaEvents.ORDER_CANCEL)
@@ -93,16 +81,16 @@ class SagaStateMachineConfiguration extends EnumStateMachineConfigurerAdapter<Sa
                 .source(SagaStates.DISCOUNT_CANCEL_OK).target(SagaStates.ORDER_CANCELED).event(SagaEvents.ORDER_CANCEL)
                 .and()
                 .withExternal()
-                .source(SagaStates.DISCOUNT_CANCEL_FAIL).target(SagaStates.ORDER_CANCEL_FAIL).event(SagaEvents.ORDER_CANCEL_ERROR)
-                .and()
-                .withExternal()
-                .source(SagaStates.ORDER_COMPLETED).target(SagaStates.PAYMENT_CANCELED).event(SagaEvents.PAYMENT_CANCEL)
+                .source(SagaStates.PAYMENT_CANCEL_REQUEST).target(SagaStates.PAYMENT_CANCELED).event(SagaEvents.PAYMENT_CANCEL)
                 .and()
                 .withExternal()
                 .source(SagaStates.PAYMENT_CANCEL_OK).target(SagaStates.DISCOUNT_CANCELED).event(SagaEvents.DISCOUNT_CANCEL)
                 .and()
                 .withExternal()
-                .source(SagaStates.PAYMENT_CANCEL_FAIL).target(SagaStates.ORDER_CANCEL_FAIL).event(SagaEvents.ORDER_CANCEL_ERROR)
+                .source(SagaStates.PAYMENT_CANCEL_FAIL).target(SagaStates.ORDER_CANCEL_FAILED).event(SagaEvents.ORDER_CANCEL_FAIL)
+                .and()
+                .withExternal()
+                .source(SagaStates.DISCOUNT_CANCEL_FAIL).target(SagaStates.ORDER_CANCEL_FAILED).event(SagaEvents.ORDER_CANCEL_FAIL)
         ;
     }
 

@@ -49,7 +49,7 @@ public class TestController {
                 .value("")
                 .build();
 
-        StateMachine<SagaStates, SagaEvents> sagaStateMachine = sagaService.getSagaStateMachine(saga);
+        StateMachine<SagaStates, SagaEvents> sagaStateMachine = sagaService.getStateMachine(saga);
 
         log.info("after calling sagaStateMachine() : {}", sagaStateMachine.getState().getId().name());
 
