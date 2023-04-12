@@ -32,11 +32,11 @@ public class SagaService {
     private static final String PAYMENT_REQUEST = "payment-request";
     private static final String PAYMENT_RESPONSE= "payment-response";
     private static final String ORDER_ID_HEADER = "orderId";
+    private static SagaEvents sagaEvents;
 
     private final SagaProducer sagaProducer;
-    private final SagaEvents sagaEvents;
-    private final StateMachineFactory<SagaStates, SagaEvents> factory;
 
+    private final StateMachineFactory<SagaStates, SagaEvents> factory;
 
     public Saga getNext(Saga saga) {
         SagaEvents nextEvent = getSagaEvent(SagaStates.valueOf(saga.currentState()));
