@@ -25,12 +25,12 @@ import java.util.Optional;
 public class SagaService {
 
     private static final String SAGA_TOPIC = "saga-topic";
-    private static final String ORDER_REQUEST = "order-request";
-    private static final String ORDER_RESPONSE = "order-response";
-    private static final String DISCOUNT_REQUEST = "discount-request";
-    private static final String DISCOUNT_RESPONSE = "discount-response";
-    private static final String PAYMENT_REQUEST = "payment-request";
-    private static final String PAYMENT_RESPONSE= "payment-response";
+    private static final String ORDER_REQUEST = "order-request-v1";
+    private static final String ORDER_RESPONSE = "order-response-v1";
+    private static final String DISCOUNT_REQUEST = "discount-request-v1";
+    private static final String DISCOUNT_RESPONSE = "discount-response-v1";
+    private static final String PAYMENT_REQUEST = "payment-request-v1";
+    private static final String PAYMENT_RESPONSE= "payment-response-v1";
     private static final String ORDER_ID_HEADER = "orderId";
     private static SagaEvents sagaEvents;
 
@@ -38,20 +38,21 @@ public class SagaService {
 
     private final StateMachineFactory<SagaStates, SagaEvents> factory;
 
-    public Saga getNext(Saga saga) {
-        SagaEvents nextEvent = getSagaEvent(SagaStates.valueOf(saga.currentState()));
+    public Saga getNextStep(Saga saga) {
+        log.info("get Next step 1 = :::: {}", saga.currentState().toString());
+        //StateMachine<SagaStates, SagaEvents> stateMachine = getStateMachine(saga);
+        //SagaStates nextState = stateMachine.getState().getId();
 
-        //
-        SagaStates nextState = getNextState(getStateMachine(saga));
-        log.info("nextStepString ========= {}", nextState);
+        SagaStates nextState = getStateMachine(saga).getState().getId();
 
-        System.out.println(nextEvent);
+        log.info("next :::::: state = {}", nextState);
+        System.out.println(nextState);
 
         Saga nextSaga = Saga.builder()
                 .customerId(saga.customerId())
                 .orderId(saga.orderId())
                 .eventTime(LocalDateTime.now())
-                .currentState(String.valueOf(nextEvent))
+                .currentState(nextState)
                 .value("data|aaa|bbb")
                 .build();
 
@@ -59,19 +60,36 @@ public class SagaService {
         log.info("next saga ::::: [{}]", nextSaga.toString());
         log.info("nextStep [0] = {}, [1] = {}", saga.currentState(), nextSaga.currentState());
 
-        String topic = getTopic(nextEvent);
-
         // produce
-        sagaProducer.asyncTest(topic, saga);
+        String topic = getTopic(nextState);
+        sagaProducer.send(topic, nextSaga);
+
+        // insert nosql
 
         return nextSaga;
     }
 
-    private String getTopic(SagaEvents nextEvent) {
-        return null;
+    private String getTopic(SagaStates sagaStates) throws IllegalStateException {
+        switch(sagaStates) {
+            case DISCOUNT_CHECK, DISCOUNT_REQUEST, DISCOUNT_CANCEL -> {
+                return DISCOUNT_REQUEST;
+            }
+            case POINT_CHECK, PAYMENT_REQUEST, PAYMENT_CANCEL -> {
+                return PAYMENT_REQUEST;
+            }
+            case ORDER_CANCEL_FAIL, ORDER_CANCEL, ORDER_COMPLETE, ORDER_CANCEL_REQUEST -> {
+                return ORDER_RESPONSE;
+            }
+            case ORDER_REQUEST -> {
+                //return ORDER_REQUEST; // order request 에 보낼 일은 없는데...
+                return ""; // topic 명 보내지 않음.
+            } 
+            default -> throw new IllegalStateException("Unexpected value: " + sagaStates);
+        }
     }
 
-    private SagaEvents getSagaEvent(SagaStates state) {
+    public SagaEvents getSagaEvent(SagaStates state) {
+        log.info(":::::switch state {}", state.toString());
         switch(state) {
             case ORDER_REQUEST -> {
                 return sagaEvents.DISCOUNT_CHECK;
@@ -88,18 +106,18 @@ public class SagaService {
             case PAYMENT_REQUEST_OK -> {
                 return sagaEvents.ORDER_COMPLETE;
             }
-            case PAYMENT_REQUEST_FAIL, PAYMENT_CANCEL_OK, PAYMENT_CANCELED -> {
+            case PAYMENT_REQUEST_FAIL, PAYMENT_CANCEL_OK, PAYMENT_CANCEL -> {
                 return sagaEvents.DISCOUNT_CANCEL;
             }
             case DISCOUNT_CHECK_FAIL, POINT_CHECK_FAIL, DISCOUNT_REQUEST_FAIL, DISCOUNT_CANCEL_OK -> {
                 return sagaEvents.ORDER_CANCEL;
             }
-            case PAYMENT_CANCEL_FAIL, DISCOUNT_CANCEL_FAIL -> {
+            case PAYMENT_CANCEL_FAIL, DISCOUNT_CANCEL_FAIL, ORDER_CANCEL_FAIL -> {
                 return sagaEvents.ORDER_CANCEL_FAIL;
             }
-//            case ORDER_COMPLETED -> {
-//                return sagaEvents.PAYMENT_CANCEL;
-//            } // 고민이 필요해
+            case ORDER_CANCEL_REQUEST -> {
+                return sagaEvents.PAYMENT_CANCEL;
+            }
             default -> throw new IllegalStateException("Unexpected value: " + state);
         }
     }
@@ -108,8 +126,8 @@ public class SagaService {
         StateMachine<SagaStates, SagaEvents> sm = this.build(saga);
 
         // get next event
-        SagaEvents event = getSagaEvent(SagaStates.valueOf(saga.currentState()));
-        log.info("get sagaEvent from switch case = {}", event);
+        SagaEvents event = getSagaEvent(saga.currentState());
+        log.info("getStateMachine sagaEvent from switch case = {}", event);
 
         Message<SagaEvents> eventMessage = MessageBuilder.withPayload(event)
                 .setHeader(ORDER_ID_HEADER, saga.orderId())
@@ -130,22 +148,15 @@ public class SagaService {
                             Optional.ofNullable(message).ifPresent(msg ->
                                     Optional.ofNullable((Long)msg.getHeaders().getOrDefault(ORDER_ID_HEADER, -1L))
                                             .ifPresent(orderId -> {
-                                                System.out.println("orderId = " + orderId);
+                                                System.out.println("stateMachine build. ::: orderId = " + orderId);
                                             }));
                         }
                     });
 
                     sma.resetStateMachine(new DefaultStateMachineContext<>(
-                            SagaStates.valueOf(saga.currentState()), null, null, null));
+                            SagaStates.valueOf(saga.currentState().name()), null, null, null));
                 });
         sm.start();
         return sm;
     }
-
-    public static SagaStates getNextState(StateMachine<SagaStates, SagaEvents> stateMachine) {
-        Transition<SagaStates, SagaEvents> transition = stateMachine.getTransitions().iterator().next();
-        log.info("transition now status :: {}", transition.getTarget().getId().toString());
-        return transition.getTarget().getId();
-    }
-
 }

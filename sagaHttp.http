@@ -1,0 +1,152 @@
+### Get
+GET http://localhost:9090/v1/point/check/ok
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "ORDER_REQUEST",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "DISCOUNT_CHECK_OK",
+  "value": ""
+}
+
+
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "DISCOUNT_CHECK_FAIL",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "DISCOUNT_REQUEST_OK",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "DISCOUNT_REQUEST_FAIL",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "PAYMENT_REQUEST_OK",
+  "value": ""
+}
+
+
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "PAYMENT_REQUEST_FAIL",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "PAYMENT_CANCEL_OK",
+  "value": ""
+}
+
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "PAYMENT_CANCEL_FAIL",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "DISCOUNT_CANCEL_OK",
+  "value": ""
+}
+
+
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "DISCOUNT_CANCEL_FAIL",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "ORDER_CANCEL_REQUEST",
+  "value": ""
+}
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "currentState": "ORDER_CANCEL_FAIL",
+  "value": ""
+}

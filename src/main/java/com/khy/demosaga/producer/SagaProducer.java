@@ -19,7 +19,11 @@ public class SagaProducer {
 
     private final KafkaTemplate<String, Saga> kafkaJsonTemplate;
 
-    public void async(String topic, Saga saga) {
+    public void send(String topic, Saga saga) {
+        this.async(topic, saga);
+    }
+
+    private void async(String topic, Saga saga) {
         ListenableFuture<SendResult<String, Saga>> future = kafkaJsonTemplate.send(topic, saga);
         future.addCallback(new KafkaSendCallback<>(){
             @Override
