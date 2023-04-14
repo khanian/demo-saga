@@ -21,7 +21,7 @@ import java.util.Map;
 public class KafkaJsonListenerContainerConfiguration {
 //public class KafkaJsonListenerContainerConfiguration implements KafkaListenerConfigurer {
 
-    private final String BOOTSTRAP_SERVER = "localhost:9092";
+    //private final String BOOTSTRAP_SERVER = "localhost:9092";
 
     //private final LocalValidatorFactoryBean validator;
     //public KafkaJsonListenerContainerConfiguration(LocalValidatorFactoryBean validator) {
@@ -46,7 +46,7 @@ public class KafkaJsonListenerContainerConfiguration {
 
     private Map<String, Object> consumerProps() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, SagaConstants.BOOTSTRAP_SERVER);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         return props;

@@ -29,7 +29,7 @@ public class SagaProducer {
             @Override
             public void onFailure(KafkaProducerException ex) {
                 ProducerRecord<Object, Object> record = ex.getFailedProducerRecord();
-                log.error("Fail to send Message. record = [{}]", record);
+                log.error("Fail to send Message. topic={}, record = {}", topic, record);
                 // todo
                 // batch or manual
             }
@@ -37,7 +37,7 @@ public class SagaProducer {
             @Override
             public void onSuccess(SendResult<String, Saga> result) {
                 // modify debug
-                log.info("Success to send message. message = [{}]", saga);
+                log.info("Success to send message. topic={}. message = {}", topic, saga);
             }
         });
     }
