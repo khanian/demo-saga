@@ -20,9 +20,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static com.khy.demosaga.config.SagaConstants.ORDER_ID_HEADER;
-import static com.khy.demosaga.config.SagaConstants.ORDER_RESPONSE_TOPIC;
-
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -36,6 +33,7 @@ public class SagaService {
 
     public Saga getNextStep(Saga saga) {
         log.info("get Next step 1 = :::: {}", saga.currentState().toString());
+        sendStateLog(saga);
         //StateMachine<SagaStates, SagaEvents> stateMachine = getStateMachine(saga);
         //SagaStates nextState = stateMachine.getState().getId();
 
@@ -58,10 +56,10 @@ public class SagaService {
 
         // produce
         String topic = getTopic(nextState);
-        sagaProducer.send(topic, nextSaga);
+        sagaProducer.send(topic, nextSaga.customerId(), nextSaga);
 
-        // insert nosql
-
+        // save status insert nosql
+        sendStateLog(nextSaga);
         return nextSaga;
     }
 
@@ -154,6 +152,12 @@ public class SagaService {
 
     private void sendStateLog(Saga saga) {
         // send state information for save state to nosql
-        sagaProducer.send(SagaConstants.SAGA_STATE_TOPIC, saga);
+        log.info("send Stat log ::::::: {}, {}", saga.currentState(), saga);
+        sagaProducer.send(SagaConstants.SAGA_STATE_TOPIC, saga.customerId(), saga);
+    }
+
+    // send message saga response topic
+    public Saga sendResponse(Saga saga) {
+        return null;
     }
 }

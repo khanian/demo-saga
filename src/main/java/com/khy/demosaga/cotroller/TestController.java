@@ -108,6 +108,20 @@ public class TestController {
         return nextSaga;
     }
 
+    @PostMapping("v1/responsePost")
+    public Saga sendResponse(@RequestBody SagaRequestDto sagaDto) {
+        Saga saga = Saga.builder()
+                .eventTime(LocalDateTime.now())
+                .customerId(sagaDto.customerId())
+                .orderId(sagaDto.customerId())
+                .currentState(SagaStates.valueOf(sagaDto.currentState()))
+                .value("")
+                .build();
+        Saga nextSaga = sagaService.sendResponse(saga);
+
+        return nextSaga;
+    }
+
     @GetMapping("v1/test")
     public List<Saga> testEvent() {
         List<Saga> sagaList = new ArrayList<>();

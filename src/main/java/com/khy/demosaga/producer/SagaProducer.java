@@ -19,12 +19,12 @@ public class SagaProducer {
 
     private final KafkaTemplate<String, Saga> kafkaJsonTemplate;
 
-    public void send(String topic, Saga saga) {
-        this.async(topic, saga);
+    public void send(String topic, Long customerId, Saga saga) {
+        this.async(topic, customerId, saga);
     }
 
-    private void async(String topic, Saga saga) {
-        ListenableFuture<SendResult<String, Saga>> future = kafkaJsonTemplate.send(topic, saga);
+    private void async(String topic, Long customerId, Saga saga) {
+        ListenableFuture<SendResult<String, Saga>> future = kafkaJsonTemplate.send(topic, String.valueOf(customerId), saga);
         future.addCallback(new KafkaSendCallback<>(){
             @Override
             public void onFailure(KafkaProducerException ex) {
@@ -42,7 +42,7 @@ public class SagaProducer {
         });
     }
 
-    public void asyncTest(String topic, Saga saga) {
-        kafkaJsonTemplate.send(topic, saga);
+    public void asyncTest(String topic, Long customerId, Saga saga) {
+        kafkaJsonTemplate.send(topic, String.valueOf(customerId), saga);
     }
 }
