@@ -18,6 +18,7 @@ public class SagaConsumer {
     @KafkaListener(id = "saga-listener-id", topics = SagaConstants.SAGA_STATE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenSaga(Saga saga) {
         log.info("Only READ Saga Status History. saga=[{}]", saga);
+        //sagaService.getNextStep(saga);
         //sagaService.saveOrderSagaHistory(saga);
     }
     @KafkaListener(id = "order-listener-id", topics = SagaConstants.ORDER_REQUEST_TOPIC, containerFactory = "kafkaJsonContainerFactory")

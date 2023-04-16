@@ -33,7 +33,7 @@ public class SagaService {
 
     public Saga getNextStep(Saga saga) {
         log.info("get Next step 1 = :::: {}", saga.currentState().toString());
-        sendStateLog(saga);
+        //sendStateLog(saga);
         //StateMachine<SagaStates, SagaEvents> stateMachine = getStateMachine(saga);
         //SagaStates nextState = stateMachine.getState().getId();
 
@@ -108,7 +108,7 @@ public class SagaService {
             case ORDER_CANCEL_REQUEST -> {
                 return SagaEvents.PAYMENT_CANCEL;
             }
-            default -> throw new IllegalStateException("Unexpected value: " + state);
+            default -> throw new IllegalStateException("[강]Unexpected state value in Event Method: " + state);
         }
     }
 
