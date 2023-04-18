@@ -3,6 +3,7 @@ package com.khy.demosaga.config;
 import com.khy.demosaga.model.Saga;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,20 +15,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@EnableKafka
 public class KafkaJsonTemplateConfiguration {
 
     //private final String BOOTSTRAP_SERVER = "localhost:9092";
 
     @Bean
     public KafkaTemplate<String, Saga> KafkaJsonTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+        return new KafkaTemplate<>(producerJsonFactory());
     }
 
-    private ProducerFactory<String, Saga> producerFactory() {
-        return new DefaultKafkaProducerFactory<>(producerProps());
+    private ProducerFactory<String, Saga> producerJsonFactory() {
+        return new DefaultKafkaProducerFactory<>(producerJsonProps());
     }
 
-    private Map<String, Object> producerProps() {
+    private Map<String, Object> producerJsonProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, SagaConstants.BOOTSTRAP_SERVER);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);

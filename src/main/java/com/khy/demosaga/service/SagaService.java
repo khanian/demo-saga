@@ -5,8 +5,11 @@ import com.khy.demosaga.model.Saga;
 import com.khy.demosaga.model.SagaEvents;
 import com.khy.demosaga.model.SagaStates;
 import com.khy.demosaga.producer.SagaProducer;
+import com.khy.demosaga.repository.OrderSagaEntity;
+import com.khy.demosaga.repository.OrderSagaRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
@@ -31,9 +34,13 @@ public class SagaService {
 
     private final StateMachineFactory<SagaStates, SagaEvents> factory;
 
+    private final ModelMapper modelMapper = new ModelMapper();
+
+    private final OrderSagaRepository orderSagaRepository;
+
     public Saga getNextStep(Saga saga) {
         log.info("get Next step 1 = :::: {}", saga.currentState().toString());
-        //sendStateLog(saga);
+        sendStateLog(saga);
         //StateMachine<SagaStates, SagaEvents> stateMachine = getStateMachine(saga);
         //SagaStates nextState = stateMachine.getState().getId();
 
@@ -43,11 +50,12 @@ public class SagaService {
         System.out.println(nextState);
 
         Saga nextSaga = Saga.builder()
-                .customerId(saga.customerId())
                 .orderId(saga.orderId())
-                .eventTime(LocalDateTime.now())
+                .customerId(saga.customerId())
+                .productId(saga.productId())
+                .amount(saga.amount())
+                .eventAt(LocalDateTime.now())
                 .currentState(nextState)
-                .value("data|aaa|bbb")
                 .build();
 
         log.info("saga ::::: [{}]", saga.toString());
@@ -55,7 +63,7 @@ public class SagaService {
         log.info("nextStep [0] = {}, [1] = {}", saga.currentState(), nextSaga.currentState());
 
         // produce
-        String topic = getTopic(nextState);
+        String topic = getProduceTopic(nextState);
         sagaProducer.send(topic, nextSaga.customerId(), nextSaga);
 
         // save status insert nosql
@@ -63,7 +71,7 @@ public class SagaService {
         return nextSaga;
     }
 
-    private String getTopic(SagaStates sagaStates) throws IllegalStateException {
+    private String getProduceTopic(SagaStates sagaStates) throws IllegalStateException {
         switch(sagaStates) {
             case DISCOUNT_CHECK, DISCOUNT_REQUEST, DISCOUNT_CANCEL -> {
                 return SagaConstants.DISCOUNT_REQUEST_TOPIC;
@@ -72,7 +80,7 @@ public class SagaService {
                 return SagaConstants.PAYMENT_REQUEST_TOPIC;
             }
             case ORDER_CANCEL_FAIL, ORDER_CANCEL, ORDER_COMPLETE, ORDER_CANCEL_REQUEST -> {
-                return SagaConstants.ORDER_RESPONSE_TOPIC;
+                return SagaConstants.SAGA_RESPONSE_TOPIC;
             }
             default -> throw new IllegalStateException("Unexpected value: " + sagaStates);
         }
@@ -96,7 +104,7 @@ public class SagaService {
             case PAYMENT_REQUEST_OK -> {
                 return SagaEvents.ORDER_COMPLETE;
             }
-            case PAYMENT_REQUEST_FAIL, PAYMENT_CANCEL_OK, PAYMENT_CANCEL -> {
+            case PAYMENT_REQUEST_FAIL, PAYMENT_CANCEL_OK -> {
                 return SagaEvents.DISCOUNT_CANCEL;
             }
             case DISCOUNT_CHECK_FAIL, POINT_CHECK_FAIL, DISCOUNT_REQUEST_FAIL, DISCOUNT_CANCEL_OK -> {
@@ -105,7 +113,7 @@ public class SagaService {
             case PAYMENT_CANCEL_FAIL, DISCOUNT_CANCEL_FAIL, ORDER_CANCEL_FAIL -> {
                 return SagaEvents.ORDER_CANCEL_FAIL;
             }
-            case ORDER_CANCEL_REQUEST -> {
+            case ORDER_CANCEL_REQUEST, PAYMENT_CANCEL -> {
                 return SagaEvents.PAYMENT_CANCEL;
             }
             default -> throw new IllegalStateException("[강]Unexpected state value in Event Method: " + state);
@@ -152,12 +160,23 @@ public class SagaService {
 
     private void sendStateLog(Saga saga) {
         // send state information for save state to nosql
+        //OrderSagaEntity orderSagaEntity = modelMapper.map(saga, OrderSagaEntity.class);
+        OrderSagaEntity orderSagaEntity = OrderSagaEntity.builder()
+                .orderId(saga.orderId())
+                .customerId(saga.customerId())
+                .productId(saga.productId())
+                .amount(saga.amount())
+                .eventAt(saga.eventAt())
+                .currentState(String.valueOf(saga.currentState()))
+                .build();
+        log.info("orderSagaEntity === {}", orderSagaEntity.toString());
+        orderSagaRepository.save(orderSagaEntity);
         log.info("send Stat log ::::::: {}, {}", saga.currentState(), saga);
         sagaProducer.send(SagaConstants.SAGA_STATE_TOPIC, saga.customerId(), saga);
     }
 
-    // send message saga response topic
     public Saga sendResponse(Saga saga) {
+        log.info(">>> response saga = {} ", saga);
         return null;
     }
 }

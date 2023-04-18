@@ -8,6 +8,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "ORDER_REQUEST",
   "value": ""
 }
@@ -19,6 +21,24 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
+  "currentState": "ORDER_CANCEL_REQUEST",
+  "value": ""
+}
+
+
+
+
+### Send Post request
+POST http://localhost:9090/v1/nextPost
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "DISCOUNT_CHECK_OK",
   "value": ""
 }
@@ -32,6 +52,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "DISCOUNT_CHECK_FAIL",
   "value": ""
 }
@@ -43,6 +65,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "DISCOUNT_REQUEST_OK",
   "value": ""
 }
@@ -54,6 +78,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "DISCOUNT_REQUEST_FAIL",
   "value": ""
 }
@@ -65,6 +91,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "PAYMENT_REQUEST_OK",
   "value": ""
 }
@@ -78,6 +106,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "PAYMENT_REQUEST_FAIL",
   "value": ""
 }
@@ -89,6 +119,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "PAYMENT_CANCEL_OK",
   "value": ""
 }
@@ -101,6 +133,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "PAYMENT_CANCEL_FAIL",
   "value": ""
 }
@@ -112,6 +146,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "DISCOUNT_CANCEL_OK",
   "value": ""
 }
@@ -125,20 +161,13 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "DISCOUNT_CANCEL_FAIL",
   "value": ""
 }
 
-### Send Post request
-POST http://localhost:9090/v1/nextPost
-Content-Type: application/json
 
-{
-  "customerId": 3,
-  "orderId": 3,
-  "currentState": "ORDER_CANCEL_REQUEST",
-  "value": ""
-}
 
 ### Send Post request
 POST http://localhost:9090/v1/nextPost
@@ -147,6 +176,8 @@ Content-Type: application/json
 {
   "customerId": 3,
   "orderId": 3,
+  "productId": 10,
+  "amount": 3300,
   "currentState": "ORDER_CANCEL_FAIL",
   "value": ""
 }

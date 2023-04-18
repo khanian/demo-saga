@@ -20,31 +20,52 @@ import java.util.Map;
 @AllArgsConstructor
 public class KafkaJsonListenerContainerConfiguration {
 //public class KafkaJsonListenerContainerConfiguration implements KafkaListenerConfigurer {
-
-    //private final String BOOTSTRAP_SERVER = "localhost:9092";
-
     //private final LocalValidatorFactoryBean validator;
     //public KafkaJsonListenerContainerConfiguration(LocalValidatorFactoryBean validator) {
 //        this.validator = validator;
 //    }
+//    @Override
+//    public void configureKafkaListeners(KafkaListenerEndpointRegistrar registrar) {
+//        registrar.setValidator(validator);
+//    }
 
+    @Bean
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> kafkaContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> containerFactory = new ConcurrentKafkaListenerContainerFactory<>();
+        containerFactory.setConsumerFactory(consumerFactory());
+
+        return containerFactory;
+    }
+
+    private ConsumerFactory<String, String> consumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(consumerProps());
+    }
+
+    private Map<String, Object> consumerProps() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, SagaConstants.BOOTSTRAP_SERVER);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        return props;
+    }
+
+    // json
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Saga>> kafkaJsonContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Saga> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(sagaConsumerFactory());
-
+        factory.setConsumerFactory(ConsumerJsonFactory());
         return factory;
     }
 
-    private ConsumerFactory<String, Saga> sagaConsumerFactory() {
+    private ConsumerFactory<String, Saga> ConsumerJsonFactory() {
         return new DefaultKafkaConsumerFactory<>(
-                consumerProps(),
+                consumerJsonProps(),
                 new StringDeserializer(),
                 new JsonDeserializer<>(Saga.class)
         );
     }
 
-    private Map<String, Object> consumerProps() {
+    private Map<String, Object> consumerJsonProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, SagaConstants.BOOTSTRAP_SERVER);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -52,8 +73,5 @@ public class KafkaJsonListenerContainerConfiguration {
         return props;
     }
 
-//    @Override
-//    public void configureKafkaListeners(KafkaListenerEndpointRegistrar registrar) {
-//        registrar.setValidator(validator);
-//    }
+
 }

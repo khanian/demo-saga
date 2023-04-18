@@ -15,23 +15,23 @@ public class SagaConsumer {
 
     private final SagaService sagaService;
 
-    @KafkaListener(id = "saga-listener-id", topics = SagaConstants.SAGA_STATE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = "saga-state-listener-id", topics = SagaConstants.SAGA_STATE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenSaga(Saga saga) {
         log.info("Only READ Saga Status History. saga=[{}]", saga);
         //sagaService.getNextStep(saga);
         //sagaService.saveOrderSagaHistory(saga);
     }
-    @KafkaListener(id = "order-listener-id", topics = SagaConstants.ORDER_REQUEST_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = "saga-request-listener-id", topics = SagaConstants.SAGA_REQUEST_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenOrderRequest(Saga saga) {
         log.info("ORDER Saga. saga=[{}]", saga);
         sagaService.getNextStep(saga);
     }
-    @KafkaListener(id = "discount-listener-id", topics = SagaConstants.DISCOUNT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = "discount-response-listener-id", topics = SagaConstants.DISCOUNT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenDiscountResponse(Saga saga) {
         log.info("DISCOUNT Saga. saga=[{}]", saga);
         sagaService.getNextStep(saga);
     }
-    @KafkaListener(id = "payment-listener-id", topics = SagaConstants.PAYMENT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = "payment-response-listener-id", topics = SagaConstants.PAYMENT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenPaymentResponse(Saga saga) {
         log.info("PAYMENT Saga. saga=[{}]", saga);
         sagaService.getNextStep(saga);

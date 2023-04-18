@@ -12,9 +12,10 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 public class SagaClass {
-    private LocalDateTime eventTime;
-    private Long customerId;
     private Long orderId;
+    private Long customerId;
+    private Long productId;
+    private Long amount;
     private SagaStates currentState;
-    private String value;
+    private LocalDateTime eventAt;
 }

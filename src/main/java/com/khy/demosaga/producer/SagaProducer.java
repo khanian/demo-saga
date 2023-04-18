@@ -41,8 +41,4 @@ public class SagaProducer {
             }
         });
     }
-
-    public void asyncTest(String topic, Long customerId, Saga saga) {
-        kafkaJsonTemplate.send(topic, String.valueOf(customerId), saga);
-    }
 }

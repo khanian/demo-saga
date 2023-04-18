@@ -24,7 +24,7 @@ public class DemoSagaApplication {
 //                    .currentState(SagaStates.DISCOUNT_CHECK_OK)
 //                    .value("")
 //                    .build();
-//            sagaProducer.send("saga-topic", saga.customerId(), saga);
+//            sagaProducer.send("saga-topic", saga.getCustomerId(), saga);
         };
     }
 }
