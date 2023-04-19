@@ -10,6 +10,7 @@ import com.khy.demosaga.repository.OrderSagaRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
@@ -39,7 +40,7 @@ public class SagaService {
     private final OrderSagaRepository orderSagaRepository;
 
     public Saga getNextStep(Saga saga) {
-        log.info("get Next step 1 = :::: {}", saga.currentState().toString());
+        log.info("get Next step 1 = :::: {}", saga.getCurrentState().toString());
         sendStateLog(saga);
         //StateMachine<SagaStates, SagaEvents> stateMachine = getStateMachine(saga);
         //SagaStates nextState = stateMachine.getState().getId();
@@ -50,21 +51,22 @@ public class SagaService {
         System.out.println(nextState);
 
         Saga nextSaga = Saga.builder()
-                .orderId(saga.orderId())
-                .customerId(saga.customerId())
-                .productId(saga.productId())
-                .amount(saga.amount())
+                .customerId(saga.getCustomerId())
+                .orderId(saga.getOrderId())
+                .productId(saga.getProductId())
+                .amount(saga.getAmount())
+                .shippingAddress(saga.getShippingAddress())
+                .currentState(String.valueOf(nextState))
                 .eventAt(LocalDateTime.now())
-                .currentState(nextState)
                 .build();
 
-        log.info("saga ::::: [{}]", saga.toString());
-        log.info("next saga ::::: [{}]", nextSaga.toString());
-        log.info("nextStep [0] = {}, [1] = {}", saga.currentState(), nextSaga.currentState());
+        log.info(">>> saga ::::: [{}]", saga.toString());
+        log.info(">>> next saga ::::: [{}]", nextSaga.toString());
+        log.info(">>> nextStep from {} to {}", saga.getCurrentState(), nextSaga.getCurrentState());
 
         // produce
         String topic = getProduceTopic(nextState);
-        sagaProducer.send(topic, nextSaga.customerId(), nextSaga);
+        sagaProducer.send(topic, nextSaga.getCustomerId(), nextSaga);
 
         // save status insert nosql
         sendStateLog(nextSaga);
@@ -124,11 +126,11 @@ public class SagaService {
         StateMachine<SagaStates, SagaEvents> sm = this.build(saga);
 
         // get next event
-        SagaEvents event = getSagaEvent(saga.currentState());
+        SagaEvents event = getSagaEvent(SagaStates.valueOf(saga.getCurrentState()));
         log.info("getStateMachine sagaEvent from switch case = {}", event);
 
         Message<SagaEvents> eventMessage = MessageBuilder.withPayload(event)
-                .setHeader(SagaConstants.ORDER_ID_HEADER, saga.orderId())
+                .setHeader(SagaConstants.ORDER_ID_HEADER, saga.getOrderId())
                 .build();
 
         sm.sendEvent(eventMessage);
@@ -136,7 +138,7 @@ public class SagaService {
     }
 
     private StateMachine<SagaStates, SagaEvents> build(Saga saga) {
-        StateMachine<SagaStates, SagaEvents> sm = this.factory.getStateMachine(String.valueOf(saga.orderId()));
+        StateMachine<SagaStates, SagaEvents> sm = this.factory.getStateMachine(String.valueOf(saga.getOrderId()));
         sm.stop();
         sm.getStateMachineAccessor()
                 .doWithAllRegions(sma -> {
@@ -152,7 +154,7 @@ public class SagaService {
                     });
 
                     sma.resetStateMachine(new DefaultStateMachineContext<>(
-                            SagaStates.valueOf(saga.currentState().name()), null, null, null));
+                            SagaStates.valueOf(saga.getCurrentState()), null, null, null));
                 });
         sm.start();
         return sm;
@@ -160,19 +162,12 @@ public class SagaService {
 
     private void sendStateLog(Saga saga) {
         // send state information for save state to nosql
-        //OrderSagaEntity orderSagaEntity = modelMapper.map(saga, OrderSagaEntity.class);
-        OrderSagaEntity orderSagaEntity = OrderSagaEntity.builder()
-                .orderId(saga.orderId())
-                .customerId(saga.customerId())
-                .productId(saga.productId())
-                .amount(saga.amount())
-                .eventAt(saga.eventAt())
-                .currentState(String.valueOf(saga.currentState()))
-                .build();
-        log.info("orderSagaEntity === {}", orderSagaEntity.toString());
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        OrderSagaEntity orderSagaEntity = modelMapper.map(saga, OrderSagaEntity.class);
+        log.info(">>> orderSagaEntity === {}", orderSagaEntity.toString());
         orderSagaRepository.save(orderSagaEntity);
-        log.info("send Stat log ::::::: {}, {}", saga.currentState(), saga);
-        sagaProducer.send(SagaConstants.SAGA_STATE_TOPIC, saga.customerId(), saga);
+        log.info(">>> send Stat log ::::::: {}, {}", saga.getCurrentState(), saga);
+        sagaProducer.send(SagaConstants.SAGA_STATE_TOPIC, saga.getCustomerId(), saga);
     }
 
     public Saga sendResponse(Saga saga) {

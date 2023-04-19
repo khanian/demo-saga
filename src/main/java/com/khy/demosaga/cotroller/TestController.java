@@ -39,7 +39,7 @@ public class TestController {
                 .customerId(1L)
                 .productId(100L)
                 .eventAt(LocalDateTime.now())
-                .currentState(SagaStates.DISCOUNT_CHECK_OK)
+                .currentState(String.valueOf(SagaStates.DISCOUNT_CHECK_OK))
                 .build();
         Saga nextSaga = sagaService.getNextStep(saga);
 
@@ -48,14 +48,7 @@ public class TestController {
 
     @PostMapping("v1/nextPost")
     public Saga sendNext(@RequestBody OrderSagaDto sagaDto, Model model) {
-        Saga saga = Saga.builder()
-                .orderId(sagaDto.customerId())
-                .customerId(sagaDto.customerId())
-                .productId(sagaDto.productId())
-                .amount(sagaDto.amount())
-                .currentState(SagaStates.valueOf(sagaDto.currentState()))
-                .eventAt(LocalDateTime.now())
-                .build();
+        Saga saga = modelMapper.map(sagaDto, Saga.class);
         Saga nextSaga = sagaService.getNextStep(saga);
         return nextSaga;
     }
@@ -72,24 +65,27 @@ public class TestController {
         List<Saga> sagaList = new ArrayList<>();
 
         Saga saga = Saga.builder()
-                .eventAt(LocalDateTime.now())
                 .customerId(2L)
                 .orderId(2L)
                 .productId(101L)
                 .amount(2200L)
-                .currentState(SagaStates.DISCOUNT_REQUEST_OK)
+                .shippingAddress("test")
+                .currentState(String.valueOf(SagaStates.DISCOUNT_REQUEST_OK))
+                .eventAt(LocalDateTime.now())
                 .build();
 
         StateMachine<SagaStates, SagaEvents> sagaStateMachine = sagaService.getStateMachine(saga);
-        log.info("after calling sagaStateMachine() : {}", sagaStateMachine.getState().getId().name());
+        log.info(">>> test after calling sagaStateMachine() : {}", sagaStateMachine.getState().getId().name());
 
         sagaList.add(saga);
         Saga nextSaga = Saga.builder()
+                .customerId(saga.getCustomerId())
+                .orderId(saga.getOrderId())
+                .productId(saga.getProductId())
+                .amount(saga.getAmount())
+                .shippingAddress(saga.getShippingAddress())
+                .currentState(String.valueOf(sagaStateMachine.getState().getId()))
                 .eventAt(LocalDateTime.now())
-                .customerId(saga.customerId())
-                .orderId(saga.orderId())
-                .amount(saga.amount())
-                .currentState(sagaStateMachine.getState().getId())
                 .build();
         sagaList.add(nextSaga);
 

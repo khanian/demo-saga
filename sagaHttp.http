@@ -10,6 +10,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "ORDER_REQUEST",
   "value": ""
 }
@@ -23,6 +24,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "ORDER_CANCEL_REQUEST",
   "value": ""
 }
@@ -39,6 +41,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "DISCOUNT_CHECK_OK",
   "value": ""
 }
@@ -54,6 +57,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "DISCOUNT_CHECK_FAIL",
   "value": ""
 }
@@ -67,6 +71,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "DISCOUNT_REQUEST_OK",
   "value": ""
 }
@@ -80,6 +85,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "DISCOUNT_REQUEST_FAIL",
   "value": ""
 }
@@ -93,6 +99,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "PAYMENT_REQUEST_OK",
   "value": ""
 }
@@ -108,6 +115,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "PAYMENT_REQUEST_FAIL",
   "value": ""
 }
@@ -121,6 +129,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "PAYMENT_CANCEL_OK",
   "value": ""
 }
@@ -135,6 +144,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "PAYMENT_CANCEL_FAIL",
   "value": ""
 }
@@ -148,6 +158,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "DISCOUNT_CANCEL_OK",
   "value": ""
 }
@@ -163,6 +174,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "DISCOUNT_CANCEL_FAIL",
   "value": ""
 }
@@ -178,6 +190,7 @@ Content-Type: application/json
   "orderId": 3,
   "productId": 10,
   "amount": 3300,
+  "shippingAddress": "seoul jongro-gu",
   "currentState": "ORDER_CANCEL_FAIL",
   "value": ""
 }
