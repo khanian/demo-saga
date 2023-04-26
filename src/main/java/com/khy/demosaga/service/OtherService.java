@@ -57,4 +57,15 @@ public class OtherService {
             default -> throw new IllegalStateException(">>> Unexpected value: " + consumeTopicName);
         }
     }
+
+    public Saga produceSagaRequest(Saga saga) {
+        log.info(">>> saga request = {}, saga = {}", SagaConstants.SAGA_REQUEST_TOPIC, saga);
+        sagaProducer.send(SagaConstants.SAGA_REQUEST_TOPIC, saga.getCustomerId(), saga);
+        return saga;
+    }
+
+    public Saga consumeSagaResponse(Saga saga) {
+        log.info(">>> saga response = {}, saga = {} ", SagaConstants.SAGA_RESPONSE_TOPIC, saga);
+        return saga;
+    }
 }

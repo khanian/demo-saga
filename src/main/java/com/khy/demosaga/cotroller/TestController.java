@@ -53,12 +53,12 @@ public class TestController {
         return nextSaga;
     }
 
-    @PostMapping("v1/responsePost")
-    public Saga sendResponse(@RequestBody OrderSagaDto sagaDto) {
-        Saga saga = modelMapper.map(sagaDto, Saga.class);
-        Saga nextSaga = sagaService.sendResponse(saga);
-        return nextSaga;
-    }
+//    @PostMapping("v1/responsePost")
+//    public Saga sendResponse(@RequestBody OrderSagaDto sagaDto) {
+//        Saga saga = modelMapper.map(sagaDto, Saga.class);
+//        Saga nextSaga = sagaService.sendResponse(saga);
+//        return nextSaga;
+//    }
 
     @GetMapping("v1/test")
     public List<Saga> testEvent() {
