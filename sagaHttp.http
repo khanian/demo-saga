@@ -6,13 +6,12 @@ POST http://localhost:9090/v1/nextPost
 Content-Type: application/json
 
 {
-  "customerId": 3,
-  "orderId": 3,
+  "customerId": 3003,
+  "orderId": 30001,
   "productId": 10,
   "amount": 3300,
   "shippingAddress": "seoul jongro-gu",
-  "currentState": "ORDER_REQUEST",
-  "value": ""
+  "currentState": "ORDER_REQUEST"
 }
 
 ### Send Post request
@@ -20,13 +19,12 @@ POST http://localhost:9090/v1/nextPost
 Content-Type: application/json
 
 {
-  "customerId": 3,
-  "orderId": 3,
+  "customerId": 3003,
+  "orderId": 30001,
   "productId": 10,
   "amount": 3300,
   "shippingAddress": "seoul jongro-gu",
-  "currentState": "ORDER_CANCEL_REQUEST",
-  "value": ""
+  "currentState": "ORDER_CANCEL_REQUEST"
 }
 
 

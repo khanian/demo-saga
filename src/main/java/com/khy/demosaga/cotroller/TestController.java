@@ -25,7 +25,7 @@ import java.util.List;
 public class TestController {
 
     private final SagaService sagaService;
-    private final ModelMapper modelMapper = new ModelMapper();
+    private final ModelMapper modelMapper;
 
     @GetMapping("hello")
     public String getHello() {
