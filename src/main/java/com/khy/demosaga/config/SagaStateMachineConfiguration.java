@@ -100,7 +100,7 @@ class SagaStateMachineConfiguration extends EnumStateMachineConfigurerAdapter<Sa
         StateMachineListenerAdapter<SagaStates, SagaEvents> adapter = new StateMachineListenerAdapter<>() {
             @Override
             public void stateChanged(State<SagaStates, SagaEvents> fromState, State<SagaStates, SagaEvents> toState) {
-                // 리스너의 동작을 구현
+                // 리스너의 동작을 구현 여기에서 저장?
                 log.info("StateMachine Listener. State changed from {} to {}",
                         fromState == null ? "start" : fromState.getId().toString(),
                         toState.getId().toString());
