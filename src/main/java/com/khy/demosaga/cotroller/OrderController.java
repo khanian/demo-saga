@@ -2,7 +2,7 @@ package com.khy.demosaga.cotroller;
 
 import com.khy.demosaga.dto.OrderSagaDto;
 import com.khy.demosaga.model.Saga;
-import com.khy.demosaga.service.SagaService;
+import com.khy.demosaga.service.OtherService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class OrderController {
 
-    private final SagaService sagaService;
+    private final OtherService otherService;
     private final ModelMapper modelMapper = new ModelMapper();
     @GetMapping("orderForm")
     public String checkoutForm(Model moder) {
@@ -32,7 +32,7 @@ public class OrderController {
         log.info(">>> sagaDto = {} ", sagaDto.toString());
         Saga saga = modelMapper.map(sagaDto, Saga.class);
         log.info(">>> saga = {} ", saga.toString());
-        Saga nextSaga = sagaService.getNextStep(saga);
+        Saga nextSaga = otherService.produceSagaRequest(saga);
         model.addAttribute("orderSaga", nextSaga);
         return "submitComplete";
     }

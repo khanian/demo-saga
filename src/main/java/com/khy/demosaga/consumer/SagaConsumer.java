@@ -15,23 +15,21 @@ public class SagaConsumer {
 
     private final SagaService sagaService;
 
-    @KafkaListener(id = "saga-state-listener-id", topics = SagaConstants.SAGA_STATE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = SagaConstants.SAGA_STATE_TOPIC_ID, topics = SagaConstants.SAGA_STATE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenSaga(Saga saga) {
-        log.info("Only READ Saga Status History. saga=[{}]", saga);
-        //sagaService.getNextStep(saga);
-        //sagaService.saveOrderSagaHistory(saga);
+        log.info("Only READ Saga Status History. saga={}", saga);
     }
-    @KafkaListener(id = "saga-request-listener-id", topics = SagaConstants.SAGA_REQUEST_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = SagaConstants.SAGA_REQUEST_TOPIC_ID, topics = SagaConstants.SAGA_REQUEST_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenOrderRequest(Saga saga) {
-        log.info("ORDER Saga. saga=[{}]", saga);
+        log.info(">>> Consume ORDER Request Saga. saga=[{}]", saga);
         sagaService.getNextStep(saga);
     }
-    @KafkaListener(id = "discount-response-listener-id", topics = SagaConstants.DISCOUNT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = SagaConstants.DISCOUNT_RESPONSE_TOPIC_ID, topics = SagaConstants.DISCOUNT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenDiscountResponse(Saga saga) {
         log.info("DISCOUNT Saga. saga=[{}]", saga);
         sagaService.getNextStep(saga);
     }
-    @KafkaListener(id = "payment-response-listener-id", topics = SagaConstants.PAYMENT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
+    @KafkaListener(id = SagaConstants.PAYMENT_RESPONSE_TOPIC_ID, topics = SagaConstants.PAYMENT_RESPONSE_TOPIC, containerFactory = "kafkaJsonContainerFactory")
     public void listenPaymentResponse(Saga saga) {
         log.info("PAYMENT Saga. saga=[{}]", saga);
         sagaService.getNextStep(saga);

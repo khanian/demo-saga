@@ -170,8 +170,4 @@ public class SagaService {
         sagaProducer.send(SagaConstants.SAGA_STATE_TOPIC, saga.getCustomerId(), saga);
     }
 
-    public Saga sendResponse(Saga saga) {
-        log.info(">>> response saga = {} ", saga);
-        return null;
-    }
 }
